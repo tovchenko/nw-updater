@@ -13,16 +13,14 @@ var request = require('request'),
     spawn = require('child_process').spawn,
     torrentStream = require('torrent-stream');
 
-var Decompress = require('decompress')
-var events = require('events')
-var util = require('util')
+var Decompress = require('decompress');
+var events = require('events');
+var util = require('util');
 
-util.inherits(Updater, events.EventEmitter)
-
-;
+util.inherits(Updater, events.EventEmitter);
 
 var CHANNELS = ['stable', 'beta', 'nightly'],
-    FILENAME = 'package.nw.new'
+    FILENAME = 'package.nw.new';
 
 var VERIFY_PUBKEY = "-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEAjjfrud4fMoIc9QSwdO0snzi5yd4bwtJYCSOA6GCtjplYPwBTNzMeOI7CFOue\nNObSNf1mQCepIVKFK+/WYNtN7z6pSVbSjU7lIT6yh+ifcZTI8ezurIrtfstFjW6LCZv4XzvZ\nK6l9zgT7Z8PfIQ7NdE2cTfJRUk7HLOsWZTiu6N63OJD6Xrt9SymLzdFnsWqCauDB2HRUXZUL\nb90JtHokEiOHCW+KiKPIFLZpBB0bobFXCHGAsZjQ+ZZfKINRoeGqzHCqUnzQFAUSsEV1tTOb\nMzlBLOT4a6T7eBLKhDGkH99cdZFXPZPVqvEzuNDMOsb5osk6FdQZtmSl6QRUslb0fQIDAQAB\n-----END RSA PUBLIC KEY-----\n"
 
@@ -37,31 +35,28 @@ function Updater(options) {
         return new Updater(options);
     }
 
-    var self = this;
-    //module.exports = self
-
     this.options = _.defaults(options || {}, {
         endpoint: 'http://torrentv.github.io/update.json',
         channel: 'beta',
 	    pubkey: VERIFY_PUBKEY
     });
 
-    var os = ""
+    var os = "";
     switch (process.platform) {
         case 'darwin':
-            os = 'mac'
+            os = 'mac';
             break;
         case 'win32':
-            os = 'windows'
+            os = 'windows';
             break;
         case 'linux':
-            os = 'linux'
+            os = 'linux';
             break;
         default:
-            os = 'unknown'
+            os = 'unknown';
             break;
     }
-    this.os = os
+    this.os = os;
 
     if (/64/.test(process.arch)) {
         this.arch = 'x64';
@@ -69,20 +64,20 @@ function Updater(options) {
         this.arch = 'x86';
     }
 
-    this.currentVersion = options.currentVersion
+    this.currentVersion = options.currentVersion;
 
 
     this.outputDir = process.cwd();
-    if(this.os === "linux" || this.os === "windows"){
-        this.outputDir = process.execPath
+    if(this.os === "linux" || this.os === "windows") {
+        this.outputDir = process.execPath;
     }
 
     this.updateData = null;
 
-    this.check = this.check.bind(this)
-    this.download = this.download.bind(this)
-    this.install = this.install.bind(this)
-    this.displayNotification = this.displayNotification.bind(this)
+    this.check = this.check.bind(this);
+    this.download = this.download.bind(this);
+    this.install = this.install.bind(this);
+    this.displayNotification = this.displayNotification.bind(this);
 }
 
 Updater.prototype.check = function() {
@@ -118,7 +113,7 @@ Updater.prototype.check = function() {
     });
 
     return promise.then(function(data) {
-        var self = data["this"]
+        var self = data["this"];
         /*
         if(!_.contains(Object.keys(data), self.os)) {
             // No update for this OS, FreeBSD or SunOS.
@@ -140,7 +135,7 @@ Updater.prototype.check = function() {
         }
 
         if(semver.gt(updateData.version, self.currentVersion)) {
-            self.emit('download',updateData.version)
+            self.emit('download',updateData.version);
             self.updateData = updateData;
             return true;
         }
@@ -189,8 +184,8 @@ Updater.prototype.verify = function(source) {
     readStream.on('end', function() {
         hash.end();
         verify.end();
-        var hashResult = hash.read().toString('hex')
-        var resultFromSign = verify.verify(self.options.pubkey, self.updateData.signature+"", 'base64')
+        var hashResult = hash.read().toString('hex');
+        var resultFromSign = verify.verify(self.options.pubkey, self.updateData.signature+"", 'base64');
         if(self.updateData.checksum !== hashResult ||
             resultFromSign == false
         ) {
@@ -249,15 +244,29 @@ function installWindows(downloadPath, updateData) {
 }
 
 function installWindows2(downloadPath, updateData) {
-    var outputDir = path.dirname(downloadPath),
-        installDir = path.join(outputDir, 'app');
+    var outputDir = path.dirname(downloadPath);
     var defer = Q.defer();
 
+    var subFolders = fs.readdirSync(outputDir);
+    subFolders = _.sortBy(subFolders, function (i) {
+        return i.name.toLowerCase();
+    });
+
+    var folder = 'app0';
+    if (!_.isEmpty(subFolders)) {
+        folder = _.last(subFolders);
+        var lastChar = parseInt(folder.slice(-1), 10);
+        if (!_.isNaN(lastChar)) {
+            folder = folder.slice(0, -1) + lastChar;
+        } else {
+            folder = folder + '0';
+        }
+    }
 
     var decompress = Decompress({mode: '644'})
         .src(downloadPath)
-        .dest(installDir)
-        .use(Decompress.zip())
+        .dest(path.join(outputDir, folder))
+        .use(Decompress.zip());
 
     //var pack = new zip(downloadPath);
     decompress.run(
@@ -336,7 +345,7 @@ function installOSX(downloadPath, updateData) {
             var decompress = Decompress({mode: '744'})
                 .src(downloadPath)
                 .dest(installDir)
-                .use(Decompress.zip())
+                .use(Decompress.zip());
 
 
             //pack.extractAllToAsync(installDir, true, function(err) {
@@ -441,4 +450,4 @@ Updater.prototype.update = function() {
 
 };
 
-module.exports = Updater
+module.exports = Updater;
