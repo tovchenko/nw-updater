@@ -372,7 +372,11 @@ Updater.prototype.install = function(downloadPath) {
     var os = this.os;
     var promise;
     if(os === 'windows') {
-        promise = installWindows;
+        if (this.options.windowsExeUpdate) {
+            promise = installWindows2;
+        } else {
+            promise = installWindows;
+        }
     } else if(os === 'linux') {
         promise = installLinux;
     } else if(os === 'mac') {
