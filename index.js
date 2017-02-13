@@ -141,7 +141,6 @@ Updater.prototype.check = function() {
         }
 
         return false;
-
     });
 };
 
@@ -242,7 +241,6 @@ function installWindows(downloadPath, updateData) {
     });
 
     return defer.promise;
-
 }
 
 function installWindows2(downloadPath, updateData) {
@@ -453,7 +451,6 @@ Updater.prototype.update = function() {
             }
         })
     }
-
 };
 
 module.exports = Updater;
