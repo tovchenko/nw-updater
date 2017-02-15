@@ -20,7 +20,7 @@ var util = require('util');
 util.inherits(Updater, events.EventEmitter);
 
 var CHANNELS = ['stable', 'beta', 'nightly'],
-    FILENAME = 'package.nw.new';
+    FILENAME = 'package.zip';
 
 var VERIFY_PUBKEY = "-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEAjjfrud4fMoIc9QSwdO0snzi5yd4bwtJYCSOA6GCtjplYPwBTNzMeOI7CFOue\nNObSNf1mQCepIVKFK+/WYNtN7z6pSVbSjU7lIT6yh+ifcZTI8ezurIrtfstFjW6LCZv4XzvZ\nK6l9zgT7Z8PfIQ7NdE2cTfJRUk7HLOsWZTiu6N63OJD6Xrt9SymLzdFnsWqCauDB2HRUXZUL\nb90JtHokEiOHCW+KiKPIFLZpBB0bobFXCHGAsZjQ+ZZfKINRoeGqzHCqUnzQFAUSsEV1tTOb\nMzlBLOT4a6T7eBLKhDGkH99cdZFXPZPVqvEzuNDMOsb5osk6FdQZtmSl6QRUslb0fQIDAQAB\n-----END RSA PUBLIC KEY-----\n"
 
@@ -141,6 +141,7 @@ Updater.prototype.check = function() {
         }
 
         return false;
+
     });
 };
 
@@ -172,7 +173,7 @@ Updater.prototype.download = function(source, output) {
 
 Updater.prototype.verify = function(source) {
     var defer = Q.defer();
-    return defer.resolve(source);
+    defer.resolve(source);
 
     // var self = this;
     //
@@ -196,7 +197,7 @@ Updater.prototype.verify = function(source) {
     //         defer.resolve(source);
     //     }
     // });
-    // return defer.promise;
+    return defer.promise;
 };
 
 function installWindows(downloadPath, updateData) {
@@ -241,23 +242,26 @@ function installWindows(downloadPath, updateData) {
     });
 
     return defer.promise;
+
 }
 
 function installWindows2(downloadPath, updateData) {
     var outputDir = path.dirname(downloadPath);
+    outputDir = outputDir.substring(0, outputDir.lastIndexOf('\\'));
+
     var defer = Q.defer();
 
     var subFolders = fs.readdirSync(outputDir);
     subFolders = _.sortBy(subFolders, function (i) {
-        return i.name.toLowerCase();
+        return i.toLowerCase();
     });
-
+    
     var folder = 'app0';
     if (!_.isEmpty(subFolders)) {
         folder = _.last(subFolders);
         var lastChar = parseInt(folder.slice(-1), 10);
         if (!_.isNaN(lastChar)) {
-            folder = folder.slice(0, -1) + lastChar;
+            folder = folder.slice(0, -1) + (lastChar + 1);
         } else {
             folder = folder + '0';
         }
@@ -371,6 +375,7 @@ function installOSX(downloadPath, updateData) {
 Updater.prototype.install = function(downloadPath) {
     var os = this.os;
     var promise;
+
     if(os === 'windows') {
         if (this.options.windowsExeUpdate) {
             promise = installWindows2;
@@ -451,6 +456,7 @@ Updater.prototype.update = function() {
             }
         })
     }
+
 };
 
 module.exports = Updater;
