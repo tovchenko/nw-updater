@@ -256,14 +256,14 @@ function installWindows2(downloadPath, updateData) {
         return i.toLowerCase();
     });
     
-    var folder = 'app0';
+    var folder = '0';
     if (!_.isEmpty(subFolders)) {
         folder = _.last(subFolders);
-        var lastChar = parseInt(folder.slice(-1), 10);
-        if (!_.isNaN(lastChar)) {
-            folder = folder.slice(0, -1) + (lastChar + 1);
+        var appVer = parseInt(folder, 10);
+        if (!_.isNaN(appVer)) {
+            folder = (appVer + 1).toString();
         } else {
-            folder = folder + '0';
+            folder = '0';
         }
     }
 
