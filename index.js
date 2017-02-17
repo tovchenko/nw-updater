@@ -251,20 +251,23 @@ function installWindows2(downloadPath, updateData) {
 
     var defer = Q.defer();
 
-    var subFolders = fs.readdirSync(outputDir);
+    var subFolders = fs.readdirSync(outputDir).filter(function(file) {
+        return fs.statSync(path.join(outputDir, file)).isDirectory();
+    });
     subFolders = _.sortBy(subFolders, function (i) {
         return i.toLowerCase();
     });
     
     var folder = '0';
     if (!_.isEmpty(subFolders)) {
-        folder = _.last(subFolders);
-        var appVer = parseInt(folder, 10);
-        if (!_.isNaN(appVer)) {
-            folder = (appVer + 1).toString();
-        } else {
-            folder = '0';
-        }
+        subFolders.every(function(el) {
+            var appVer = parseInt(folder, 10);
+            if (!_.isNaN(appVer)) {
+                folder = (appVer + 1).toString();
+                return false;
+            }
+            return true;
+        });
     }
 
     var decompress = Decompress({mode: '644'})
